@@ -19,7 +19,6 @@ main :: IO ()
 main = do
   setUpLogger
   let logFn = warningM "MyApp"
-
   -- let logFn = putStrLn
 
   replicateM_ 20 $ do
