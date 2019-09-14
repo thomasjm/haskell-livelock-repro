@@ -17,8 +17,12 @@ import System.Process
 
 main :: IO ()
 main = do
-  setUpLogger
+  updateGlobalLogger rootLoggerName (setLevel INFO)
+  updateGlobalLogger rootLoggerName removeHandler
+  handler <- streamHandler stderr DEBUG
+  updateGlobalLogger rootLoggerName (addHandler $ setFormatter handler $ simpleLogFormatter "[$time $loggername $prio] $msg")
   let logFn = warningM "MyApp"
+
   -- let logFn = putStrLn
 
   replicateM_ 20 $ do
@@ -33,10 +37,3 @@ main = do
       liftIO $ readCreateProcess (proc "echo" ["hi"]) ""
 
   threadDelay 60000000
-
-
-setUpLogger = do
-  updateGlobalLogger rootLoggerName (setLevel INFO)
-  updateGlobalLogger rootLoggerName removeHandler
-  handler <- streamHandler stderr DEBUG
-  updateGlobalLogger rootLoggerName (addHandler $ setFormatter handler $ simpleLogFormatter "[$time $loggername $prio] $msg")
