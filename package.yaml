@@ -26,13 +26,7 @@ executables:
     - -O2
     - -W
     dependencies:
-    - async
-    - containers
-    - convertible
-    - text
     - interpolate
     - hslogger
     - posix-pty
     - process
-    - random
-    - unix

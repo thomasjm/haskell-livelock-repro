@@ -1,8 +1,7 @@
-{-# LANGUAGE CPP, QuasiQuotes, MultiWayIf, ViewPatterns, LambdaCase, RecordWildCards, ScopedTypeVariables, OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes, OverloadedStrings #-}
 module Main where
 
 import Control.Concurrent
-import Control.Concurrent.Async
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.String.Interpolate.IsString
@@ -17,23 +16,25 @@ import System.Process
 
 main :: IO ()
 main = do
-  updateGlobalLogger rootLoggerName (setLevel INFO)
+  -- Remove the default handler and set our own.
+  -- If you use the default handler, the problem doesn't happen.
   updateGlobalLogger rootLoggerName removeHandler
   handler <- streamHandler stderr DEBUG
-  updateGlobalLogger rootLoggerName (addHandler $ setFormatter handler $ simpleLogFormatter "[$time $loggername $prio] $msg")
+  -- If the message is just "$msg" instead of "Msg: $msg", the problem doesn't happen
+  updateGlobalLogger rootLoggerName (addHandler $ setFormatter handler $ simpleLogFormatter "Msg: $msg")
   let logFn = warningM "MyApp"
 
-  -- let logFn = putStrLn
-
+  -- Repeat this 20 times
   replicateM_ 20 $ do
     logFn [i|Spawning spawnWithPty|]
-    async $ do
+    forkIO $ do
       logFn [i|Doing spawnWithPty|]
       void $ spawnWithPty Nothing True "sleep" ["99999999"] (80, 24)
 
     logFn [i|Spawning readCreateProcess|]
-    async $ do
+    forkIO $ void $ do
       logFn [i|Doing readCreateProcess|]
       liftIO $ readCreateProcess (proc "echo" ["hi"]) ""
 
+  -- All CPUs should now be stuck at 100%
   threadDelay 60000000
